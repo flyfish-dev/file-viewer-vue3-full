@@ -11,25 +11,39 @@ import {
   type ViewerOptions
 } from '@file-viewer/vue3'
 import { computed, defineComponent, h, ref, useAttrs, type App, type PropType } from 'vue'
+import {
+  getDefaultFullAssetBaseUrl,
+  mergeFullAssetOptions
+} from './fullAssets.js'
 
 export * from '@file-viewer/vue3'
+export {
+  getDefaultFullAssetBaseUrl,
+  setDefaultFullAssetBaseUrl
+} from './fullAssets.js'
 
 export const fileViewerFullPreset = allRenderers
 
-export function withFullViewerOptions(options: ViewerOptions = {}): ViewerOptions {
+export function withFullViewerOptions(
+  options: ViewerOptions = {},
+  assetBaseUrl: string | URL | null | undefined = getDefaultFullAssetBaseUrl()
+): ViewerOptions {
   const { preset = allRenderers, rendererMode = 'replace', ...rest } = options
   return {
-    ...rest,
+    ...mergeFullAssetOptions(rest, assetBaseUrl),
     preset,
     rendererMode,
     autoRenderers: rest.autoRenderers ?? true
   }
 }
 
-export function withFullMountOptions(options: ViewerMountOptions = {}): ViewerMountOptions {
+export function withFullMountOptions(
+  options: ViewerMountOptions = {},
+  assetBaseUrl: string | URL | null | undefined = getDefaultFullAssetBaseUrl()
+): ViewerMountOptions {
   return {
     ...options,
-    options: withFullViewerOptions(options.options)
+    options: withFullViewerOptions(options.options, assetBaseUrl)
   }
 }
 
