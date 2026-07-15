@@ -1,6 +1,6 @@
 # @file-viewer/vue3-full
 
-完整格式能力的 Vue 3 集成包。构建后会由仓库脚本同步完整 README。
+完整格式能力的 Vue 3 集成包，已内置 `@file-viewer/preset-all`，无需重复安装 preset。要覆盖所有 Worker / WASM 格式，请按下方“Full 包快速开始”发布 `<部署基址>/file-viewer/` 运行时资源。
 
 ```bash
 npm install @file-viewer/vue3-full
@@ -61,47 +61,15 @@ npm install @file-viewer/vue3-full
 | Audio | media | `.mp3`, `.mpeg`, `.wav`, `.ogg`, `.oga`, `.opus`, `.m4a`, `.aac`, `.flac`, `.weba`, `.midi`, `.mid` | 下载 | 按需异步 |
 | Data Asset | asset | `.ttf`, `.otf`, `.woff`, `.woff2`, `.psd`, `.ai`, `.eps`, `.sqlite`, `.wasm`, `.parquet`, `.avro`, `.webarchive` | 下载, HTML, 搜索 | 按需异步 |
 
-## 工程级按需 renderer 装配
+## Full 包快速开始
 
-快速开始的核心是先跑通组件，再明确格式能力边界。推荐先安装当前生态组件包，再按产品形态选择 `@file-viewer/preset-lite`、`@file-viewer/preset-office`、`@file-viewer/preset-engineering` 或 `@file-viewer/preset-all`。Webpack、Rspack、Rollup、Umi、传统多页应用等非 Vite 项目，优先通过 `options.preset` 或 `options.renderers` 显式注入能力；Vite 插件只是进一步省掉手动 import 并复制离线资产。
+`@file-viewer/vue3-full` 已内置 `@file-viewer/preset-all` 并默认启用完整 renderer 矩阵。不要再安装或传入 `preset-office`、`preset-all` 或单独 renderer。
 
-```bash
-npm i @file-viewer/vue3-full @file-viewer/preset-office
-```
+从 2.1.30 起，使用同一资产交付契约的 8 个官方 Full 包是：`@file-viewer/web-full`、`@file-viewer/vue3-full`、`@file-viewer/vue2.7-full`、`@file-viewer/vue2.6-full`、`@file-viewer/react-full`、`@file-viewer/react-legacy-full`、`@file-viewer/jquery-full`、`@file-viewer/svelte-full`。
 
-```ts
-import officePreset from '@file-viewer/preset-office'
+完整格式支持还包括 PDF、Office、CAD、Typst、Archive、Draw.io、SQLite 等链路使用的 Worker、WASM、字体和 vendor 资源。仅执行 `npm install` 只会安装完整 renderer 代码，不会把这些静态资源发布到业务站点；缺少资源目录时，轻量格式和部分兼容路径可能仍可用，但不属于 full 包的完整格式支持。
 
-const options = {
-  preset: officePreset,
-  rendererMode: 'replace'
-}
-```
-
-需要组合办公文档与工程图纸等能力时，继续使用同一个 `preset` 字段传数组即可：
-
-```ts
-import officePreset from '@file-viewer/preset-office'
-import engineeringPreset from '@file-viewer/preset-engineering'
-
-const options = {
-  preset: [officePreset, engineeringPreset],
-  rendererMode: 'replace'
-}
-```
-
-如果只需要少数格式，也可以安装单 renderer 并传给 `options.renderers`：
-
-```ts
-import { pdfRenderer } from '@file-viewer/renderer-pdf'
-
-const options = {
-  renderers: [pdfRenderer],
-  rendererMode: 'replace'
-}
-```
-
-Vite 项目可以再加插件，插件会免配置发现已安装 preset、注入 virtual module，并按命中格式复制 Worker / WASM / 字体 / vendor 资源：
+### Vite：自动发布完整资源
 
 ```bash
 npm i -D @file-viewer/vite-plugin
@@ -111,59 +79,21 @@ npm i -D @file-viewer/vite-plugin
 import { fileViewerRenderers } from '@file-viewer/vite-plugin'
 
 export default {
-  plugins: [
-    fileViewerRenderers({
-      copyAssets: true
-      // 无需 preset 配置：插件会自动发现已安装的 @file-viewer/preset-office。
-    })
-  ]
+  plugins: [fileViewerRenderers({ copyAssets: true })]
 }
 ```
 
-重度用户需要一次拥有官方 Demo 的完整能力时，直接把 preset 换成全量包；非 Vite 项目继续传 `options.preset`，Vite 配置也保持不变：
+插件会识别已安装的 full 包，并在开发与生产构建中把同版本完整资源发布到部署基址下的 `file-viewer/`（根部署即 `/file-viewer/`）；业务代码无需再次注入 preset。
+
+### Webpack / Rspack / Rollup / Vue CLI / Umi
+
+运行随 full 包安装的同版本 CLI，并把输出目录作为部署基址下的 `file-viewer/` 静态发布：
 
 ```bash
-npm i @file-viewer/vue3-full @file-viewer/preset-all
+npx --no-install file-viewer-copy-assets ./public/file-viewer
 ```
 
-需要自定义装配时，再显式配置插件：
-
-```ts
-fileViewerRenderers({
-  preset: 'auto',        // 同时开启源码扫描时，仍自动发现已安装 preset
-  scan: true,            // 识别 fileViewerFormats、data-file-viewer-formats、accept
-  formats: ['pdf'],      // 在已安装 preset 之外额外补充精确 renderer
-  copyAssets: true,
-  chunkStrategy: 'renderer'
-})
-```
-
-严格裁剪或组件库内部测试时，可以关闭自动注入并显式传入 virtual module：
-
-```ts
-// vite.config.ts
-fileViewerRenderers({ formats: ['pdf'], inject: false, copyAssets: true })
-```
-
-```ts
-// 业务组件入口
-import { configuredFileViewerRenderers } from 'virtual:file-viewer-renderers'
-
-const options = {
-  renderers: configuredFileViewerRenderers,
-  rendererMode: 'replace'
-}
-```
-
-- Vue、React、Svelte、jQuery、Vanilla JS / Pure Web 都传同一份 `options`，只是在各自生态中映射为 props、hook、action、plugin 或 `mountViewer(...)` 参数。
-- `preset-lite` 面向文本、Markdown、代码、图片和音视频；`preset-office` 面向 PDF / Word / Excel / PowerPoint / OFD；`preset-engineering` 面向 CAD / 3D / 绘图 / XMind / Geo / Typst / EDA / Data。
-- 想要最小包体时，可以不用 preset，直接安装 `@file-viewer/renderer-pdf`、`@file-viewer/renderer-word` 等单个 renderer，并通过 `options.renderers` 手动注入。
-- `fileViewerRenderers()` 或 `fileViewerRenderers({ copyAssets:true })` 会免配置自动发现已安装 preset；如果同时开启 `scan:true`，请使用 `preset:'auto'` 或 `autoPresets:true` 保留 preset 自动发现。
-- `scan:true` 会识别 `fileViewerFormats`、`data-file-viewer-formats` 和上传控件 `accept`，调试与打包时自动选择 renderer。
-- `copyAssets:true` 会复制 PDF/CAD/Typst/Archive/Data 等 worker、WASM 和 vendor 资源，满足离线和企业内网部署；压缩包目录会优先使用 `vendor/libarchive/worker-bundle.js` / `libarchive.wasm`，Worker 不可用时只对 ZIP/TAR/GZIP 进入兼容路径。
-- `builtinRenderers` 仍可用于高级基线控制或历史兼容；普通快速接入只需要 `preset` / `renderers` 与 `rendererMode`。
-- 如果打开的是支持矩阵内但未装配的格式，预览器会提示应安装的 preset / renderer；只有真正不在矩阵中的扩展名才提示不支持。
-- `@file-viewer/preset-all` 是全量一键方案，适合 demo、后台运维工具和企业全格式附件中心；普通业务仍建议优先选择更窄的 preset。
+默认资源目录是 `<部署基址>/file-viewer/`，根部署时 URL 为 `/file-viewer/`。只有资源不在这个约定目录时，才需要调用 `setDefaultFullAssetBaseUrl()`；显式 `options.*Url` 仍保持最高优先级。
 
 ## 统一参数与事件
 
@@ -311,17 +241,17 @@ const options = {
 
 | 资源 | 说明 |
 | --- | --- |
-| 通用 viewer assets | Pure Web 包提供 `file-viewer-copy-assets`，可把 Worker、WASM、vendor 和示例资源复制到业务静态目录。 |
+| 通用 viewer assets | 所有 `*-full` 包都提供与自身同版本的 `file-viewer-copy-assets` CLI，用于把 Worker、WASM、字体和 vendor 资源复制到业务静态目录并生成完整性清单；`web-full` 的完整 `dist/` 还会直接携带这些资源。 |
 | CAD / DWG / DXF / DWF | 按需配置 `options.cad.wasmPath`、`workerUrl`、`dwfWasmUrl`、`dxfEncoding`，支持自托管和内网部署。 |
 | PDF / DOCX / Excel / PPTX | 按需配置 `options.pdf.workerUrl`、`options.pdf.cMapUrl`、`options.pdf.wasmUrl`、`options.pdf.standardFontDataUrl`、`options.pdf.cjkFontFallbackPath`、`options.pdf.identityFontRepair`、`options.docx.workerUrl`、`options.docx.workerJsZipUrl`、`options.spreadsheet.workerUrl`、`options.presentation.workerUrl` / `options.presentation.workerType`；PDF 默认探测真实静态 Worker，不可用时懒加载包内 handler 兜底，未嵌入的中文字体默认按页加载本地 Noto Sans SC 分片回退，缺失 ToUnicode 的异常 Identity CJK 字体会在检测到乱码后尝试内存修复；DOCX 默认自动选择 Worker 或主线程解析，Electron `file://` 等本地不安全协议会自动回退；Excel 默认 `worker: auto`，大文件达到 `workerAutoThreshold` 自动启用 Worker，列宽拖拽可通过 `options.spreadsheet.resizableColumns` 显式开启；PPTX 默认按需创建模块 Worker，严格 CSP、旧 WebView 或自托管 CDN 场景可固定 Worker 地址。 |
 | Typst / SQLite / Archive | 按需配置 Typst compiler/renderer WASM、`data.sqlWasmUrl`、`archive.workerUrl` / `archive.wasmUrl`；Typst 仅使用本地 WASM 真实渲染，不访问公共 CDN；Archive 兼容 GBK/GB18030 旧 ZIP 中文文件名，RAR、7z 和加密压缩包仍需要 libarchive Worker/WASM。 |
 | Drawing | Draw.io 默认使用随 viewer assets 分发的官方 diagrams.net 离线 viewer；路径特殊时可通过 `options.drawing.viewerScriptUrl` 覆盖，`preferOfficial:false` 才切到内置 SVG 兜底。 |
-| 离线部署 | 运行时不依赖公共 CDN 或第三方在线资源；`file-viewer-copy-assets` 会复制 PDF、CAD、Typst、SQLite、压缩包、Draw.io、DOCX worker/JSZip、PPTX worker 和 Office worker/vendor 资产。Vue full 包默认使用 `/file-viewer/` 作为资源根，路径不同可先调用 `setDefaultFullAssetBaseUrl()`。 |
+| 离线部署 | 运行时不依赖公共 CDN 或第三方在线资源；所有 `*-full` 包默认使用部署基址下的 `file-viewer/`（根部署即 `/file-viewer/`）。Vite 使用 `copyAssets:true` 自动发布，其他构建工具运行 `npx --no-install file-viewer-copy-assets ./public/file-viewer`；资源放在其它位置时调用 `setDefaultFullAssetBaseUrl()`。 |
 | 部署原则 | 默认只在命中特定格式时异步加载对应依赖；没有命中的格式不会拉取重型 Worker、WASM 或解析库。 |
 
-### Vue full 默认资产根
+### Full 包默认资产根
 
-Vue 3 / Vue 2.7 / Vue 2.6 full 包默认把 PDF、DOCX、PPTX、Excel、CAD、Typst、Draw.io、SQLite 和 Archive 资产指向 `/file-viewer/`。发布 `file-viewer-copy-assets` 产物时，如果保持这个静态前缀，就不需要再手写 `archive.workerUrl` / `archive.wasmUrl`。
+`@file-viewer/vue3-full` 默认把 PDF、DOCX、PPTX、Excel、CAD、Typst、Draw.io、SQLite 和 Archive 资产指向部署基址下的 `file-viewer/`（根部署即 `/file-viewer/`）。运行随包安装的同版本 `file-viewer-copy-assets` 并发布其产物后，不需要逐项手写资源 URL。
 
 ```ts
 import { setDefaultFullAssetBaseUrl } from '@file-viewer/vue3-full'

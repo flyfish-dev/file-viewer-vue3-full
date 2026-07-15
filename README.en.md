@@ -1,6 +1,6 @@
 # @file-viewer/vue3-full
 
-Full-format Vue 3 package. The release scripts replace this placeholder with the complete package README.
+Full-format Vue 3 package with `@file-viewer/preset-all` built in; do not install another preset. Follow “Full Package Quick Start” below to publish the `<deployment-base>/file-viewer/` runtime assets required by every Worker/WASM format.
 
 ```bash
 npm install @file-viewer/vue3-full
@@ -61,47 +61,15 @@ The shared format matrix currently covers 24 preview pipelines and 206 file exte
 | Audio | media | `.mp3`, `.mpeg`, `.wav`, `.ogg`, `.oga`, `.opus`, `.m4a`, `.aac`, `.flac`, `.weba`, `.midi`, `.mid` | download | lazy async |
 | Data Asset | asset | `.ttf`, `.otf`, `.woff`, `.woff2`, `.psd`, `.ai`, `.eps`, `.sqlite`, `.wasm`, `.parquet`, `.avro`, `.webarchive` | download, HTML export, search | lazy async |
 
-## Engineering-Grade On-Demand Renderer Assembly
+## Full Package Quick Start
 
-The quickstart flow is: get the component running first, then make the format boundary explicit. Install the component package for the current ecosystem, then choose `@file-viewer/preset-lite`, `@file-viewer/preset-office`, `@file-viewer/preset-engineering`, or `@file-viewer/preset-all`. For Webpack, Rspack, Rollup, Umi, classic multi-page apps, and other non-Vite stacks, pass capability explicitly through `options.preset` or `options.renderers`. The Vite plugin is an optional convenience layer that removes manual imports and copies offline assets.
+`@file-viewer/vue3-full` already includes `@file-viewer/preset-all` and enables the complete renderer matrix by default. Do not install or pass `preset-office`, `preset-all`, or individual renderers again.
 
-```bash
-npm i @file-viewer/vue3-full @file-viewer/preset-office
-```
+Since 2.1.30, the eight official Full packages using this asset-delivery contract are: `@file-viewer/web-full`, `@file-viewer/vue3-full`, `@file-viewer/vue2.7-full`, `@file-viewer/vue2.6-full`, `@file-viewer/react-full`, `@file-viewer/react-legacy-full`, `@file-viewer/jquery-full`, `@file-viewer/svelte-full`.
 
-```ts
-import officePreset from '@file-viewer/preset-office'
+Complete format support also requires the Worker, WASM, font, and vendor assets used by PDF, Office, CAD, Typst, Archive, Draw.io, SQLite, and related pipelines. Running `npm install` alone installs the complete renderer code but does not publish those static assets into the application. Lightweight formats and a few compatibility paths may still work without the asset directory, but that is not complete full-package support.
 
-const options = {
-  preset: officePreset,
-  rendererMode: 'replace'
-}
-```
-
-When a product combines Office documents with engineering drawings, keep the same `preset` field and pass an array:
-
-```ts
-import officePreset from '@file-viewer/preset-office'
-import engineeringPreset from '@file-viewer/preset-engineering'
-
-const options = {
-  preset: [officePreset, engineeringPreset],
-  rendererMode: 'replace'
-}
-```
-
-For exact small cuts, install one renderer and pass it through `options.renderers`:
-
-```ts
-import { pdfRenderer } from '@file-viewer/renderer-pdf'
-
-const options = {
-  renderers: [pdfRenderer],
-  rendererMode: 'replace'
-}
-```
-
-Vite projects can add the plugin. It auto-discovers installed presets, injects the virtual module, and copies matching Worker / WASM / font / vendor assets:
+### Vite: Deploy Complete Assets Automatically
 
 ```bash
 npm i -D @file-viewer/vite-plugin
@@ -111,59 +79,21 @@ npm i -D @file-viewer/vite-plugin
 import { fileViewerRenderers } from '@file-viewer/vite-plugin'
 
 export default {
-  plugins: [
-    fileViewerRenderers({
-      copyAssets: true
-      // No preset option required: the plugin discovers installed @file-viewer/preset-office.
-    })
-  ]
+  plugins: [fileViewerRenderers({ copyAssets: true })]
 }
 ```
 
-Heavy users that want the complete official demo capability can switch to the full preset. Non-Vite projects keep `options.preset`; the Vite config stays the same:
+The plugin recognizes the installed full package and publishes its same-version runtime assets under `file-viewer/` at the deployment base in development and production builds (`/file-viewer/` for a root deployment). Application code does not inject another preset.
+
+### Webpack / Rspack / Rollup / Vue CLI / Umi
+
+Run the same-version CLI installed with the full package and serve its output as `file-viewer/` under the deployment base:
 
 ```bash
-npm i @file-viewer/vue3-full @file-viewer/preset-all
+npx --no-install file-viewer-copy-assets ./public/file-viewer
 ```
 
-Use explicit plugin options only when you need customization:
-
-```ts
-fileViewerRenderers({
-  preset: 'auto',        // keep installed preset auto-discovery while scanning source hints
-  scan: true,            // detects fileViewerFormats, data-file-viewer-formats, and accept
-  formats: ['pdf'],      // adds exact renderers outside the installed preset
-  copyAssets: true,
-  chunkStrategy: 'renderer'
-})
-```
-
-For strict custom cuts or component-library tests, disable injection and pass the virtual module explicitly:
-
-```ts
-// vite.config.ts
-fileViewerRenderers({ formats: ['pdf'], inject: false, copyAssets: true })
-```
-
-```ts
-// Application viewer entry
-import { configuredFileViewerRenderers } from 'virtual:file-viewer-renderers'
-
-const options = {
-  renderers: configuredFileViewerRenderers,
-  rendererMode: 'replace'
-}
-```
-
-- Vue, React, Svelte, jQuery, and Vanilla JavaScript / Pure Web all receive the same `options`; each package maps them to native props, hooks, actions, plugins, or `mountViewer(...)` parameters.
-- `preset-lite` covers text, Markdown, code, images, audio, and video; `preset-office` covers PDF / Word / Excel / PowerPoint / OFD; `preset-engineering` covers CAD / 3D / drawing / XMind / Geo / Typst / EDA / Data.
-- For the smallest custom bundle, skip presets, install individual renderers such as `@file-viewer/renderer-pdf` or `@file-viewer/renderer-word`, and pass them through `options.renderers`.
-- `fileViewerRenderers()` or `fileViewerRenderers({ copyAssets:true })` auto-discovers installed presets without explicit configuration. When `scan:true` is also enabled, use `preset:'auto'` or `autoPresets:true` to keep preset auto-discovery.
-- `scan:true` detects `fileViewerFormats`, `data-file-viewer-formats`, and upload `accept` hints so development and production builds select matching renderers automatically.
-- `copyAssets:true` copies PDF/CAD/Typst/Archive/Data workers, WASM, and vendor assets for offline and enterprise intranet deployment; archive directories use `vendor/libarchive/worker-bundle.js` / `libarchive.wasm` first, while the compatibility path only covers ZIP/TAR/GZIP when the Worker cannot start.
-- `builtinRenderers` remains available for advanced baseline control or historical compatibility. Normal quick starts only need `preset` / `renderers` plus `rendererMode`.
-- If a file is in the supported matrix but its renderer is not assembled, the viewer shows the recommended preset / renderer package. Truly unknown extensions still show an unsupported-format state.
-- `@file-viewer/preset-all` is the full one-step capability path for demos, admin tools, and enterprise all-format workbenches. Normal product surfaces should still prefer narrower presets.
+The default runtime asset directory is `<deployment-base>/file-viewer/`, which is `/file-viewer/` for a root deployment. Call `setDefaultFullAssetBaseUrl()` only when assets live elsewhere; explicit `options.*Url` values keep the highest priority.
 
 ## Shared Options And Events
 
@@ -311,17 +241,17 @@ View-state sync is designed for projection systems, remote-control displays, sid
 
 | Asset | Description |
 | --- | --- |
-| Shared viewer assets | The Pure Web package ships `file-viewer-copy-assets` to copy workers, WASM, vendor files, and examples into your static directory. |
+| Shared viewer assets | Every `*-full` package exposes a `file-viewer-copy-assets` CLI at the package version. It copies workers, WASM, fonts, and vendor files into the application static directory and writes an integrity manifest. The complete `web-full` `dist/` also carries that payload directly. |
 | CAD / DWG / DXF / DWF | Configure `options.cad.wasmPath`, `workerUrl`, `dwfWasmUrl`, and `dxfEncoding` for self-hosted or intranet deployment. |
 | PDF / DOCX / Excel / PPTX | Configure `options.pdf.workerUrl`, `options.pdf.cMapUrl`, `options.pdf.wasmUrl`, `options.pdf.standardFontDataUrl`, `options.pdf.cjkFontFallbackPath`, `options.pdf.identityFontRepair`, `options.docx.workerUrl`, `options.docx.workerJsZipUrl`, `options.spreadsheet.workerUrl`, and `options.presentation.workerUrl` / `options.presentation.workerType`; PDF probes the real static worker first and lazy-loads the packaged handler when unavailable, unembedded CJK fonts fall back to self-hosted Noto Sans SC shards loaded per page, and malformed Identity CJK fonts without ToUnicode are repaired in memory after corrupted text is detected; DOCX chooses worker or main-thread parsing automatically, Electron `file://` and other unsafe local protocols fall back without user configuration; Excel defaults to `worker: auto`, enabling Worker automatically for files at or above `workerAutoThreshold`, and header drag column resizing is controlled by `options.spreadsheet.resizableColumns`; PPTX creates a module Worker on demand and can pin the worker URL/type for strict CSP, legacy WebViews, or self-hosted CDNs. |
 | Typst / SQLite / Archive | Configure Typst compiler/renderer WASM, `data.sqlWasmUrl`, and `archive.workerUrl` / `archive.wasmUrl` as needed; Typst renders through local WASM only and never falls back to a public CDN; Archive decodes legacy GBK/GB18030 ZIP entry names, while RAR, 7z, and encrypted archives still require the libarchive Worker/WASM assets. |
 | Drawing | Draw.io uses the official diagrams.net offline viewer shipped with viewer assets by default; override `options.drawing.viewerScriptUrl` for custom paths, or set `preferOfficial:false` for the built-in SVG fallback. |
-| Offline deployment | Runtime preview code does not depend on public CDN or third-party online assets; `file-viewer-copy-assets` copies PDF, CAD, Typst, SQLite, archive, Draw.io, DOCX worker/JSZip, PPTX worker, and Office worker/vendor assets. Vue full packages default to `/file-viewer/` as the asset root; call `setDefaultFullAssetBaseUrl()` first when your static prefix differs. |
+| Offline deployment | Runtime preview code does not depend on public CDN or third-party online assets. Every `*-full` package uses `file-viewer/` under the deployment base (`/file-viewer/` at the origin root). Vite publishes assets with `copyAssets:true`; other build tools run `npx --no-install file-viewer-copy-assets ./public/file-viewer`. Call `setDefaultFullAssetBaseUrl()` when assets live elsewhere. |
 | Deployment principle | Heavy workers, WASM files, and parser libraries stay lazy-loaded and are only requested when the active file type needs them. |
 
-### Vue Full Default Asset Base
+### Full Package Default Asset Base
 
-The Vue 3 / Vue 2.7 / Vue 2.6 full packages point PDF, DOCX, PPTX, Excel, CAD, Typst, Draw.io, SQLite, and Archive assets to `/file-viewer/` by default. When the output from `file-viewer-copy-assets` is served under that prefix, you do not need to hand-write `archive.workerUrl` / `archive.wasmUrl`.
+`@file-viewer/vue3-full` points PDF, DOCX, PPTX, Excel, CAD, Typst, Draw.io, SQLite, and Archive assets to `file-viewer/` under the deployment base by default (`/file-viewer/` at the origin root). After running the same-version `file-viewer-copy-assets` installed with the package and serving its output, individual asset URLs do not need to be configured.
 
 ```ts
 import { setDefaultFullAssetBaseUrl } from '@file-viewer/vue3-full'

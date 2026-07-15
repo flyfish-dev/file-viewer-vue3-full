@@ -19,6 +19,7 @@ import {
 export * from '@file-viewer/vue3'
 export {
   getDefaultFullAssetBaseUrl,
+  resetDefaultFullAssetBaseUrl,
   setDefaultFullAssetBaseUrl
 } from './fullAssets.js'
 
