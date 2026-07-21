@@ -9,7 +9,7 @@ npm install @file-viewer/vue3-full
 <!-- FILE_VIEWER_GENERATED:START -->
 ## Ecosystem Matrix
 
-Every standard component package shares `@file-viewer/core` as the only common foundation, and no framework component package depends on another framework implementation. Core owns format metadata, source loading, the renderer protocol, events, operation APIs, search, zoom, print, and export. Heavy PDF, Word, PPT/PPTX, CAD, Typst, and similar pipelines are assembled explicitly through renderer packages or presets; each framework package owns its local controller, component lifecycle, type exports, and ecosystem-specific interaction layer.
+Every standard component package shares `@file-viewer/core` as the only common foundation, and no framework component package depends on another framework implementation. Core owns format metadata, source loading, the renderer protocol, events, operation APIs, search, zoom, print, export, and the framework-neutral browser shell. Heavy PDF, Word, PPT/PPTX, CAD, Typst, and similar pipelines are assembled explicitly through renderer packages or presets; each framework package owns its component lifecycle, type exports, compatibility defaults, and ecosystem-specific interaction layer.
 
 | Framework | Standard npm package | Entrypoints | GitHub | Gitee | Historical aliases |
 | --- | --- | --- | --- | --- | --- |
@@ -66,9 +66,9 @@ The shared format matrix currently covers 25 preview pipelines and 208 file exte
 
 `@file-viewer/vue3-full` already includes `@file-viewer/preset-all` and enables the complete renderer matrix by default. Do not install or pass `preset-office`, `preset-all`, or individual renderers again.
 
-Since 2.1.30, the eight official Full packages using this asset-delivery contract are: `@file-viewer/web-full`, `@file-viewer/vue3-full`, `@file-viewer/vue2.7-full`, `@file-viewer/vue2.6-full`, `@file-viewer/react-full`, `@file-viewer/react-legacy-full`, `@file-viewer/jquery-full`, `@file-viewer/svelte-full`. Version 2.2.0 adds the binary-PPT 0.3.1 runtime to the complete asset payload.
+Since 2.1.30, the eight official Full packages using this asset-delivery contract are: `@file-viewer/web-full`, `@file-viewer/vue3-full`, `@file-viewer/vue2.7-full`, `@file-viewer/vue2.6-full`, `@file-viewer/react-full`, `@file-viewer/react-legacy-full`, `@file-viewer/jquery-full`, `@file-viewer/svelte-full`. Version 2.2.0 adds the binary-PPT 0.3.2 runtime to the complete asset payload.
 
-Full packages include the complete renderer matrix and version-aligned Worker, WASM, font, and vendor assets. `vendor/ppt/` contains the binary-PPT 0.3.1 ESM, Worker, WASM, CJK font, and frame-cache modules. Vite publishes the packaged assets automatically; other build tools use the included same-version CLI. PPT runtime URLs need no configuration by default; `pptModuleUrl`, `pptWorkerUrl`, `pptWasmUrl`, and `pptFontUrl` are advanced overrides for non-standard routes.
+Full packages include the complete renderer matrix and version-aligned Worker, WASM, font, and vendor assets. `vendor/ppt/` contains the binary-PPT 0.3.2 ESM, Worker, WASM, CJK font, and frame-cache modules. Vite publishes the packaged assets automatically; other build tools use the included same-version CLI. PPT runtime URLs need no configuration by default; `pptModuleUrl`, `pptWorkerUrl`, `pptWasmUrl`, and `pptFontUrl` are advanced overrides for non-standard routes.
 
 ### Vite: Deploy Complete Assets Automatically
 
@@ -109,7 +109,7 @@ Every ecosystem package uses the same `ViewerMountOptions` and `FileViewerOption
 | `type` | Explicit extension or MIME hint that overrides automatic detection. |
 | `size` | File size hint used in lifecycle context, loading states, and safety limits. |
 | `options` | The shared `FileViewerOptions` surface. Every component package keeps the same semantics. |
-| `options.styleIsolation` | `auto`, `shadow`, `scoped`, or `none`. Pure Web / IIFE / Custom Element entries default to strong isolation; framework packages keep compatibility by default and can opt renderer content into a ShadowRoot. |
+| `options.styleIsolation` | `auto`, `shadow`, `scoped`, or `none`. `auto` uses Shadow DOM for every standard component so host-page global CSS cannot break the toolbar or document; legacy projects can explicitly use `none`. |
 | `onEvent` / `onStateChange` | Unified event and state subscriptions for imperative wrappers such as Vanilla JavaScript / Pure Web, React, and Svelte. Vue maps the same events to native emits. |
 
 ## Actual Component Props
@@ -130,7 +130,7 @@ The table below lists the real props, event channel, and customization entry for
 | Options Field | Description |
 | --- | --- |
 | `theme` | `light`, `dark`, or `system`. This takes precedence over browser `prefers-color-scheme`. |
-| `styleIsolation` | `auto`, `shadow`, `scoped`, or `none`. With `auto`, Web Component / full / IIFE entries use Shadow DOM by default; Vue, React, Svelte, and jQuery keep light-DOM compatibility unless renderer content is explicitly isolated with `shadow`. |
+| `styleIsolation` | `auto`, `shadow`, `scoped`, or `none`. With `auto`, Web Component, IIFE, Vue, React, Svelte, jQuery, and full packages all use Shadow DOM by default. Legacy integrations that depend on deep class overrides can explicitly use `none`. |
 | `watermark` | Text or image watermark with opacity, rotation, gap, size, font, and color controls. |
 | `toolbar` | Controls the theme toggle, download, print, HTML export, zoom, item order, toolbar position, and operation-level preflight checks. |
 | `search` | Document search, highlight class names, case sensitivity, whole-word matching, max matches, and debounce. |
@@ -138,25 +138,29 @@ The table below lists the real props, event channel, and customization entry for
 | `archive` | Archive Worker/WASM URLs, timeout, cache, archive limits, nested entry preview limits, and legacy GBK/GB18030 ZIP filename decoding. |
 | `pdf` | PDF.js worker, navigation pane, outline, thumbnails, rotation, streaming, range chunk size, and credentials. |
 | `docx` / `spreadsheet` | DOCX is provided by @file-viewer/renderer-word and uses the self-maintained @file-viewer/docx engine with automatic worker/main-thread selection, continuous flow reading, and async rendering by default; visual pagination is opt-in. Spreadsheet is provided by @file-viewer/renderer-spreadsheet with fidelity-first parsing, automatic Worker use for large files, and opt-in header drag column resizing. |
-| `presentation` | The presentation renderer keeps two isolated engines: binary PowerPoint 97–2003 `.ppt` uses the packaged `@file-viewer/ppt@0.3.1` Worker/OffscreenCanvas/WASM runtime with zero-config standard asset routes; `pptModuleUrl` / `pptWorkerUrl` / `pptWasmUrl` / `pptFontUrl` are custom-path overrides, while `pptWorker` and `pptCache` control its Worker and bounded frame cache. PPTX/OpenXML uses the `@file-viewer/pptx` Worker with optional `workerUrl` / `workerType` overrides. |
+| `presentation` | The presentation renderer keeps two isolated engines: binary PowerPoint 97–2003 `.ppt` uses the packaged `@file-viewer/ppt@0.3.2` Worker/OffscreenCanvas/WASM runtime with zero-config standard asset routes; `pptModuleUrl` / `pptWorkerUrl` / `pptWasmUrl` / `pptFontUrl` are custom-path overrides, while `pptWorker` and `pptCache` control its Worker and bounded frame cache. PPTX/OpenXML uses the `@file-viewer/pptx` Worker with optional `workerUrl` / `workerType` overrides. |
 | `typst` / `data` / `cad` | Typst, SQLite, CAD/DWG/DXF/DWF WASM, worker, encoding, and rendering strategy options. |
 | `hooks` / `beforeOperation` | Shared lifecycle hooks and operation preflight checks for audit, permission, telemetry, and safety controls. |
 
 ## Style Isolation And Theme Customization
 
-For OA systems, low-code shells, micro-frontends, portals, and admin products, prefer the strong Shadow DOM isolation used by Pure Web / Web Component and full packages by default. Host-page global rules for `*`, `button`, `table`, `img`, `svg`, `canvas`, and similar selectors should not leak into the viewer toolbar or rendered content, and viewer resets should not pollute the host page.
+Every standard component uses strong Shadow DOM isolation by default. Host-page global rules for `*`, `button`, `table`, `img`, `svg`, `canvas`, and similar selectors should not leak into the viewer toolbar or rendered content, and viewer resets should not pollute the host page.
 
 | Mode | Description |
 | --- | --- |
-| `auto` | Default. `@file-viewer/web`, `@file-viewer/web-full`, IIFE, and `<flyfish-file-viewer>` use Shadow DOM by default. Vue, React, Svelte, and jQuery keep light-DOM compatibility for existing projects while renderer content can still be isolated by core. |
+| `auto` | Default. Web Component, IIFE, Vue, React, Svelte, jQuery, and full packages all use Shadow DOM so host-page CSS cannot break the toolbar or renderer content. |
 | `shadow` | Creates an explicit ShadowRoot render surface. Use it when host CSS is uncontrolled, micro-frontends are mixed, low-code platforms inject global resets, or design systems have aggressive base styles. |
-| `scoped` | Does not create a ShadowRoot. Uses a stable root selector, `@layer file-viewer`, and local resets to constrain cascade impact while keeping controlled inheritance from the host. |
+| `scoped` | Does not create a ShadowRoot. Uses a stable root selector and local resets to limit its impact while keeping controlled inheritance from the host. |
 | `none` | Historical light-DOM behavior for projects that depend on deep class overrides, old theme CSS, or snapshot tests. |
+
+`styleIsolation` is a mount-time boundary. Remount the component when changing modes. Both `scoped` and `none` use Light DOM, so high-specificity or `!important` host rules can still override them.
 
 Customization should start with `--file-viewer-*` CSS variables for color, typography, spacing, radius, toolbar, and button styling. Use stable Shadow Parts only when a specific internal surface needs styling. The current Web shell exposes `host`, `shell`, `toolbar`, `toolbar-group`, `toolbar-status`, `button`, `input`, and `content`; renderer extensions should keep using stable names such as `state-panel` and `watermark`. Do not depend on internal class names; they are implementation details.
 
+In this example, `file-viewer-host` is the class on the actual Shadow host. Pass it as `class` in Vue 3, `containerClass` in Vue 2, `className` in React / Svelte, or add it to the element initialized by jQuery.
+
 ```css
-flyfish-file-viewer {
+.file-viewer-host {
   --file-viewer-bg: #f7f9fc;
   --file-viewer-text: #172033;
   --file-viewer-toolbar-bg: rgba(255, 255, 255, 0.96);
@@ -164,16 +168,16 @@ flyfish-file-viewer {
   --file-viewer-button-radius: 6px;
 }
 
-flyfish-file-viewer::part(toolbar) {
+.file-viewer-host::part(toolbar) {
   border: 1px solid rgba(20, 60, 100, 0.14);
 }
 
-flyfish-file-viewer::part(button) {
+.file-viewer-host::part(button) {
   font-weight: 600;
 }
 ```
 
-Framework packages can opt into renderer isolation through the shared options object:
+Framework packages use Shadow DOM without extra configuration; set it explicitly when you want to lock the policy:
 
 ```ts
 const options = {
@@ -245,7 +249,7 @@ View-state sync is designed for projection systems, remote-control displays, sid
 | --- | --- |
 | Shared viewer assets | Every `*-full` package exposes a `file-viewer-copy-assets` CLI at the package version. It copies workers, WASM, fonts, and vendor files into the application static directory and writes an integrity manifest. The complete `web-full` `dist/` also carries that payload directly. |
 | CAD / DWG / DXF / DWF | Configure `options.cad.wasmPath`, `workerUrl`, `dwfWasmUrl`, and `dxfEncoding` for self-hosted or intranet deployment. |
-| PDF / DOCX / Excel / PPT / PPTX | Configure `options.pdf.workerUrl`, `options.pdf.cMapUrl`, `options.pdf.wasmUrl`, `options.pdf.standardFontDataUrl`, `options.pdf.cjkFontFallbackPath`, `options.pdf.identityFontRepair`, `options.docx.workerUrl`, `options.docx.workerJsZipUrl`, `options.spreadsheet.workerUrl`, and `options.presentation.workerUrl` / `workerType`; PDF probes the real static worker first and lazy-loads the packaged handler when unavailable, unembedded CJK fonts fall back to self-hosted Noto Sans SC shards loaded per page, and malformed Identity CJK fonts without ToUnicode are repaired in memory after corrupted text is detected; DOCX chooses worker or main-thread parsing automatically, Electron `file://` and other unsafe local protocols fall back without user configuration; Excel defaults to `worker: auto`, enabling Worker automatically for files at or above `workerAutoThreshold`; CSV / TSV detects UTF-8, GBK, and GB18030 automatically and accepts `options.spreadsheet.textEncoding` as an explicit override; header drag column resizing is controlled by `options.spreadsheet.resizableColumns`; `.ppt` lazy-loads the packaged `@file-viewer/ppt@0.3.1` Worker/OffscreenCanvas/WASM runtime with bounded frame caching from `vendor/ppt/` without standard-layout configuration; `pptModuleUrl` / `pptWorkerUrl` / `pptWasmUrl` / `pptFontUrl` only override custom routes. PPTX creates its separate module Worker on demand. |
+| PDF / DOCX / Excel / PPT / PPTX | Configure `options.pdf.workerUrl`, `options.pdf.cMapUrl`, `options.pdf.wasmUrl`, `options.pdf.standardFontDataUrl`, `options.pdf.cjkFontFallbackPath`, `options.pdf.identityFontRepair`, `options.docx.workerUrl`, `options.docx.workerJsZipUrl`, `options.spreadsheet.workerUrl`, and `options.presentation.workerUrl` / `workerType`; PDF probes the real static worker first and lazy-loads the packaged handler when unavailable, unembedded CJK fonts fall back to self-hosted Noto Sans SC shards loaded per page, and malformed Identity CJK fonts without ToUnicode are repaired in memory after corrupted text is detected; DOCX chooses worker or main-thread parsing automatically, Electron `file://` and other unsafe local protocols fall back without user configuration; Excel defaults to `worker: auto`, enabling Worker automatically for files at or above `workerAutoThreshold`; CSV / TSV detects UTF-8, GBK, and GB18030 automatically and accepts `options.spreadsheet.textEncoding` as an explicit override; header drag column resizing is controlled by `options.spreadsheet.resizableColumns`; `.ppt` lazy-loads the packaged `@file-viewer/ppt@0.3.2` Worker/OffscreenCanvas/WASM runtime with bounded frame caching from `vendor/ppt/` without standard-layout configuration; `pptModuleUrl` / `pptWorkerUrl` / `pptWasmUrl` / `pptFontUrl` only override custom routes. PPTX creates its separate module Worker on demand. |
 | Typst / SQLite / Archive | Configure Typst compiler/renderer WASM, `data.sqlWasmUrl`, and `archive.workerUrl` / `archive.wasmUrl` as needed; Typst renders through local WASM only and never falls back to a public CDN; Archive decodes legacy GBK/GB18030 ZIP entry names, while RAR, 7z, and encrypted archives still require the libarchive Worker/WASM assets. |
 | Drawing | Draw.io uses the official diagrams.net offline viewer shipped with viewer assets by default; override `options.drawing.viewerScriptUrl` for custom paths, or set `preferOfficial:false` for the built-in SVG fallback. |
 | Offline deployment | Runtime preview code does not depend on public CDN or third-party online assets. Every `*-full` package uses `file-viewer/` under the deployment base (`/file-viewer/` at the origin root). Vite publishes assets with `copyAssets:true`; other build tools run `npx --no-install file-viewer-copy-assets ./public/file-viewer`. Call `setDefaultFullAssetBaseUrl()` when assets live elsewhere. |
