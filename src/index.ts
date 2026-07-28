@@ -4,13 +4,23 @@ import {
   createFlyfishFileViewer as createBaseFlyfishFileViewer,
   type CreateFlyfishFileViewerOptions,
   type FileViewerProps,
+  type FileViewerToolbarSlotProps,
   type FileViewerVue3Handle,
   type FileViewerVue3PluginOptions,
   type FlyfishFileViewerNativeController,
   type ViewerMountOptions,
   type ViewerOptions
 } from '@file-viewer/vue3'
-import { computed, defineComponent, h, ref, useAttrs, type App, type PropType } from 'vue'
+import {
+  computed,
+  defineComponent,
+  h,
+  ref,
+  useAttrs,
+  type App,
+  type PropType,
+  type SlotsType
+} from 'vue'
 import {
   getDefaultFullAssetBaseUrl,
   mergeFullAssetOptions
@@ -76,20 +86,28 @@ export const FileViewer = defineComponent({
     file: null,
     options: Object as PropType<FileViewerProps['options']>
   },
-  setup(props, { expose }) {
+  slots: Object as SlotsType<{
+    'toolbar-start': (props: FileViewerToolbarSlotProps) => unknown;
+    'toolbar-end': (props: FileViewerToolbarSlotProps) => unknown;
+  }>,
+  setup(props, { expose, slots }) {
     const attrs = useAttrs()
     const viewer = ref<FileViewerVue3Handle | null>(null)
     const fullOptions = computed(() => withFullViewerOptions(props.options))
 
     expose(createFullExpose(() => viewer.value))
 
-    return () => h(BaseFileViewer, {
-      ...attrs,
-      url: props.url,
-      file: props.file,
-      options: fullOptions.value,
-      ref: viewer
-    })
+    return () => h(
+      BaseFileViewer,
+      {
+        ...attrs,
+        url: props.url,
+        file: props.file,
+        options: fullOptions.value,
+        ref: viewer
+      },
+      slots
+    )
   }
 })
 
