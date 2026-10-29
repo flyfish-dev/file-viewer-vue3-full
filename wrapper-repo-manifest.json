@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-29T15:05:46.560Z",
+  "sourceBranch": "main",
+  "sourceCommit": "7f77f14ea",
+  "organization": "flyfish-dev",
+  "framework": "Vue 3 Full",
+  "packageName": "@file-viewer/vue3-full",
+  "packageVersion": "3.3.1",
+  "repository": "file-viewer-vue3-full",
+  "github": "https://github.com/flyfish-dev/file-viewer-vue3-full",
+  "gitee": "https://gitee.com/flyfish-dev/file-viewer-vue3-full",
+  "entryFormats": [
+    "esm",
+    "types"
+  ],
+  "historicalPackages": [],
+  "sourcePackageDir": "packages/components/vue3-full",
+  "corePackage": "@file-viewer/core",
+  "coreSourceVisibility": "public-source"
+}

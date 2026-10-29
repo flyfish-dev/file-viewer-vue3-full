@@ -1,0 +1,78 @@
+{
+  "name": "@file-viewer/vue3-full",
+  "version": "3.3.1",
+  "private": false,
+  "type": "module",
+  "description": "Browser-native file preview for Vue 3 with the Full renderer preset and self-hosted runtime assets.",
+  "keywords": [
+    "file-viewer",
+    "document-preview",
+    "vue3",
+    "full-preset",
+    "office-preview",
+    "cad-viewer",
+    "document-viewer",
+    "file-preview",
+    "self-hosted",
+    "vue"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "author": {
+    "name": "Yu Wang",
+    "email": "admin@flyfish.dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flyfish-dev/file-viewer-vue3-full.git"
+  },
+  "homepage": "https://github.com/flyfish-dev/file-viewer-vue3-full",
+  "bugs": {
+    "url": "https://github.com/flyfish-dev/file-viewer-vue3-full/issues"
+  },
+  "funding": {
+    "type": "individual",
+    "url": "https://dev.flyfish.group/donate?source=npm"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "file-viewer-copy-assets": "./scripts/copy-assets.mjs"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "scripts/copy-assets.mjs",
+    "README.md",
+    "README.en.md",
+    "README.zh-CN.md"
+  ],
+  "scripts": {
+    "build": "tsc -b tsconfig.json",
+    "type-check": "tsc -b tsconfig.json"
+  },
+  "peerDependencies": {
+    "vue": ">=3.3 <4"
+  },
+  "dependencies": {
+    "@file-viewer/preset-all": "3.3.1",
+    "@file-viewer/vue3": "3.3.1",
+    "file-viewer-copy-assets": "3.3.1"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "vue": "^3.5.42"
+  },
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@11.0.9"
+}
