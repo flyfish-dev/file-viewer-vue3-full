@@ -1,6 +1,6 @@
 {
   "name": "@file-viewer/vue3-full",
-  "version": "3.3.1",
+  "version": "3.3.3",
   "private": false,
   "type": "module",
   "description": "Browser-native file preview for Vue 3 with the Full renderer preset and self-hosted runtime assets.",
@@ -65,9 +65,9 @@
     "vue": ">=3.3 <4"
   },
   "dependencies": {
-    "@file-viewer/preset-all": "3.3.1",
-    "@file-viewer/vue3": "3.3.1",
-    "file-viewer-copy-assets": "3.3.1"
+    "@file-viewer/preset-all": "3.3.3",
+    "@file-viewer/vue3": "3.3.3",
+    "file-viewer-copy-assets": "3.3.3"
   },
   "devDependencies": {
     "typescript": "^6.0.3",
